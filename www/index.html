@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: content: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        var geolocationOptions = {
+            maxmiumAge: 5000,           // accept any position less than 5000ms old
+            timeout: 5000,              // wait up to 5000ms for a position to be received
+            enableHighAccuracy: true    // request a high accuracy position
+        };
+
+        var CITIES = [
+            { name: 'Beijing', latitude: 39.91, longitude: 116.39 },
+            { name: 'Buenos Aires', latitude: -34.61, longitude: -58.37 },
+            { name: 'Cape Town', latitude: -33.93, longitude: 28.46 },
+            { name: 'London', latitude: 51.52, longitude: -0.1 },
+            { name: 'New York', latitude: 40.67, longitude: -73.94 },
+            { name: 'Rome', latitude: 41.89, longitude: 12.5 },
+            { name: 'San Francisco', latitude: 37.77, longitude: -122.45 },
+            { name: 'Seoul', latitude: 37.564771, longitude: 126.939358 },
+            { name: 'Sydney', latitude: -33.87, longitude: 151.21 },
+            { name: 'Tokyo', latitude: 35.67, longitude: 139.77 }
+        ];
+
+        var COORD_KEYS_TO_SHOW = ['latitude', 'longitude', 'accuracy', 'altitude', 'altitudeAccuracy', 'heading', 'speed'];
+
+        function getPosition() {
+            navigator.geolocation.getCurrentPosition(
+                onPositionReceived,
+                onPositionError,
+                geolocationOptions
+            );
+        }
+
+        var watchId = null;
+        function watchPosition() {
+            watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    onPositionReceived(position);
+                    document.querySelector('.watch-button').style.display = 'none';
+                    document.querySelector('.stop-watch-button').style.display = '';
+                },
+                onPositionError,
+                geolocationOptions
+            );
+        }
+
+        function stopWatchPosition() {
+            if(watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+
+                document.querySelector('.watch-button').style.display = '';
+                document.querySelector('.stop-watch-button').style.display = 'none';
+            }
+        }
+
+        function onPositionReceived(position) {
+            // Update the map with the new co-ordinates. This is the simplest way to show
+            // a map, but there are much better map views, as outlined on the Monaca blog:
+            // https://medium.com/the-web-tub/choosing-the-right-map-integration-for-your-cordova-app-78c2a8f75d50
+            var coordsPair = position.coords.latitude + ',' + position.coords.longitude;
+            document.querySelector('.map').setAttribute('src', 'https://maps.googleapis.com/maps/api/staticmap?size=400x300&zoom=14&markers=' + coordsPair);
+
+            // Populate the city distance table
+            var citiesTableHtml = '';
+
+            CITIES.forEach(function(city) {
+                var distance = getDistanceFromLatLonInKm(city.latitude, city.longitude, position.coords.latitude, position.coords.longitude);
+                citiesTableHtml += '<tr><th>' + city.name + '</th><td>' + distance.toFixed(1) + 'km</td></tr>';
+            });
+
+            document.querySelector('.cities-table').innerHTML = citiesTableHtml;
+
+            // Populate the table with all position data
+            var positionDataTableHtml = '';
+
+            COORD_KEYS_TO_SHOW.forEach(function(key) {
+                positionDataTableHtml += '<tr><th>' + key + '</th><td>' + position.coords[key] + '</td></tr>';
+            });
+
+            // Convert the timestamp to a more human-readable format, and add it to the data table
+            positionDataTableHtml += '<tr><th>timestamp</th><td>' + new Date(position.timestamp) + '</td></th>';
+
+            document.querySelector('.position-data-table').innerHTML = positionDataTableHtml;
+
+        }
+
+        function onPositionError(error) {
+            var errorMessage = 'Could not determine position.';
+
+            if(error.code === 1) {        // permission denied
+                errorMessage += ' The app does not have permission to access location.';
+            } else if(error.code === 2) { // position unavailable
+                errorMessage += ' Position is unavailable.';
+            } else if(error.code === 3) { // timeout (or location turned off in Android)
+                errorMessage += ' The request timed out or location is off.';
+            }
+
+            window.alert(errorMessage);
+        }
+
+        // Calculating the distance between two coordinates is somewhat complex due to
+        // the curvature of the Earth. This function handles the calculation for us.
+        // From https://stackoverflow.com/a/27943
+        function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+            var R = 6371; // Radius of the earth in km
+            var dLat = deg2rad(lat2-lat1);
+            var dLon = deg2rad(lon2-lon1);
+            var a =
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                Math.sin(dLon/2) * Math.sin(dLon/2)
+                ;
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            var d = R * c; // Distance in km
+            return d;
+        }
+
+        function deg2rad(deg) {
+            return deg * (Math.PI/180)
+        }
+    </script>
+</head>
+<body>
+    <h2>Geolocation Plugin Demo</h2>
+    <button class="position-button" onclick="getPosition()">Get current position (once)</button>
+    <button class="watch-button" onclick="watchPosition()">Start watching position (continuous)</button>
+    <button class="stop-watch-button" onclick="stopWatchPosition()" style="display: none">Stop watching position</button>
+
+    <h3>Map</h3>
+    <img class="map">
+
+    <h3>Your distance from major cities</h3>
+    <table class="cities-table"></table>
+
+    <h3>All position data</h3>
+    <table class="position-data-table"></table>
+</body>
+</html>

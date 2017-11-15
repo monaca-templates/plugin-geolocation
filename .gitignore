@@ -1,0 +1,4 @@
+node_modules/
+build/
+res/
+.monaca/local_properties.json
