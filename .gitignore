@@ -1,4 +1,8 @@
+.DS_Store
 node_modules/
 build/
+platforms/
 res/
+.chromedrivers/
 .monaca/local_properties.json
+appium.log

@@ -72,7 +72,7 @@
 
             CITIES.forEach(function(city) {
                 var distance = getDistanceFromLatLonInKm(city.latitude, city.longitude, position.coords.latitude, position.coords.longitude);
-                citiesTableHtml += '<tr><th>' + city.name + '</th><td>' + distance.toFixed(1) + 'km</td></tr>';
+                citiesTableHtml += '<tr class="' + city.name + '"><th>' + city.name + '</th><td>' + distance.toFixed(1) + 'km</td></tr>';
             });
 
             document.querySelector('.cities-table').innerHTML = citiesTableHtml;
@@ -81,14 +81,13 @@
             var positionDataTableHtml = '';
 
             COORD_KEYS_TO_SHOW.forEach(function(key) {
-                positionDataTableHtml += '<tr><th>' + key + '</th><td>' + position.coords[key] + '</td></tr>';
+                positionDataTableHtml += '<tr class="' + key + '"><th>' + key + '</th><td>' + position.coords[key] + '</td></tr>';
             });
 
             // Convert the timestamp to a more human-readable format, and add it to the data table
-            positionDataTableHtml += '<tr><th>timestamp</th><td>' + new Date(position.timestamp) + '</td></th>';
+            positionDataTableHtml += '<tr class="timestamp"><th>timestamp</th><td>' + new Date(position.timestamp) + '</td></th>';
 
             document.querySelector('.position-data-table').innerHTML = positionDataTableHtml;
-
         }
 
         function onPositionError(error) {
