@@ -3,7 +3,7 @@
         "mobi.monaca.plugins.Monaca"
     ],
     "framework_version": "3.5",
-    "xcode_version": "8",
+    "xcode_version": "10.1",
     "cordova_version": "6.5",
     "plugin_settings": [],
     "external_plugins": [
